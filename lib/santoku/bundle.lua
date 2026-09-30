@@ -52,6 +52,16 @@ local function parsemodule (mod, modules, ignores, path, cpath)
   local fp, typ = addmod(modules, mod, path, cpath)
   if typ == "lua" then
     parsemodules(fp, modules, ignores, path, cpath)
+  elseif typ == "c" then
+    local reqfp = (str.match(fp, "^(.*)%.[^%.]+$") or fp) .. ".requires"
+    if fs.exists(reqfp) then
+      for line in fs.lines(reqfp) do
+        local dep = str.match(line, "^%s*(.-)%s*$")
+        if dep ~= "" then
+          parsemodule(dep, modules, ignores, path, cpath)
+        end
+      end
+    end
   end
 end
 
