@@ -1,6 +1,7 @@
 local test = require("santoku.test")
 local bundle = require("santoku.bundle")
 local err = require("santoku.error")
+local arr = require("santoku.array")
 local sys = require("santoku.system")
 local str = require("santoku.string")
 local env = require("santoku.env")
@@ -42,9 +43,17 @@ test("a C module's .requires sidecar pulls its runtime requires into the bundle"
   err.assert(sys.sh({ build("with") })() == "from b")
 
   fs.rm(fs.join(fx, "a.requires"))
-  err.assert(not err.pcall(function ()
-    return sys.sh({ build("without") })()
-  end))
+  local stderr, status = {}, nil
+  for ev, _, a, b in sys.pread({ build("without"), stderr = true }) do
+    if ev == "stderr" then
+      arr.push(stderr, a)
+    elseif ev == "exit" then
+      status = b
+    end
+  end
+  local msg = arr.concat(stderr)
+  err.assert(status ~= 0, "the bundle without a.requires must fail at runtime")
+  err.assert(str.find(msg, "no field package.preload['fx.b']", 1, true), msg)
 
   sys.execute({ "rm", "-rf", out })
 

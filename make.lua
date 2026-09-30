@@ -1,6 +1,6 @@
 local env = {
   name = "santoku-bundle",
-  version = "2.1.0-1",
+  version = "2.1.1-1",
   variable_prefix = "TK_BUNDLE",
   license = "MIT",
   public = true,
